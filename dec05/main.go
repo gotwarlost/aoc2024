@@ -72,30 +72,22 @@ func main() {
 			updates = append(updates, nums)
 		}
 	}
-	var midNums []int
-	var badOrdering [][]string
 
+	var badOrdering [][]string
+	total := 0
 	for _, update := range updates {
 		if isFixNeeded(update, ordering, false) {
 			badOrdering = append(badOrdering, update)
 			continue
 		}
-		midNums = append(midNums, midNumber(update))
-	}
-	total := 0
-	for _, num := range midNums {
-		total += num
+		total += midNumber(update)
 	}
 	log.Println("mid num total:", total)
 
-	var fixedNums []int
+	total = 0
 	for _, update := range badOrdering {
 		fixOrdering(update, ordering)
-		fixedNums = append(fixedNums, midNumber(update))
-	}
-	total = 0
-	for _, num := range fixedNums {
-		total += num
+		total += midNumber(update)
 	}
 	log.Println("fixed mid num total:", total)
 }
