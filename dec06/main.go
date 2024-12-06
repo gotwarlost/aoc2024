@@ -9,43 +9,35 @@ import (
 //go:embed input.txt
 var input string
 
-type coord struct {
+type point struct {
 	row, col int
 }
 
-var turns = map[coord]coord{
+type direction struct {
+	row, col int
+}
+
+var turns = map[direction]direction{
 	{-1, 0}: {0, 1},
 	{0, 1}:  {1, 0},
 	{1, 0}:  {0, -1},
 	{0, -1}: {-1, 0},
 }
 
-var up = coord{-1, 0}
+var up = direction{-1, 0}
 
-func addObstruction(current map[coord]bool, p coord) map[coord]bool {
-	ret := map[coord]bool{}
-	for k := range current {
-		ret[k] = true
-	}
-	ret[p] = true
-	return ret
-}
-
-func walk(rows, cols int, startPos coord, obstructions map[coord]bool) (visited map[coord][]coord, loop bool) {
-	withinLimits := func(x coord) bool {
+func walk(rows, cols int, startPos point, obstructions map[point]bool) (visited map[point][]direction, loop bool) {
+	withinLimits := func(x point) bool {
 		return x.row >= 0 && x.row < rows && x.col >= 0 && x.col < cols
 	}
 	dir := up
 	pos := startPos
-	visited = map[coord][]coord{
+	visited = map[point][]direction{
 		startPos: {up},
 	}
 
-	count := 0
-	path := []coord{pos}
 	for {
-		count++
-		next := coord{pos.row + dir.row, pos.col + dir.col}
+		next := point{pos.row + dir.row, pos.col + dir.col}
 		if !withinLimits(next) {
 			return visited, false
 		}
@@ -59,26 +51,32 @@ func walk(rows, cols int, startPos coord, obstructions map[coord]bool) (visited 
 					return visited, true
 				}
 			}
-			visited[next] = append(visited[next], dir)
-		} else {
-			visited[next] = []coord{dir}
 		}
-		path = append(path, next)
+		visited[next] = append(visited[next], dir)
 		pos = next
 	}
 }
 
+func withObstruction(current map[point]bool, p point) map[point]bool {
+	ret := map[point]bool{}
+	for k := range current {
+		ret[k] = true
+	}
+	ret[p] = true
+	return ret
+}
+
 func main() {
 	lines := strings.Split(strings.TrimSpace(input), "\n")
-	startPos := coord{-1, -1}
-	obstructions := map[coord]bool{}
+	startPos := point{-1, -1}
+	obstructions := map[point]bool{}
 	for row, line := range lines {
 		for col, ch := range line {
 			switch ch {
 			case '#':
-				obstructions[coord{row, col}] = true
+				obstructions[point{row, col}] = true
 			case '^':
-				startPos = coord{row, col}
+				startPos = point{row, col}
 			}
 		}
 	}
@@ -93,11 +91,11 @@ func main() {
 
 	count := 0
 
-	for point := range visited {
-		if point == startPos {
+	for p := range visited {
+		if p == startPos {
 			continue
 		}
-		_, loop := walk(rows, cols, startPos, addObstruction(obstructions, point))
+		_, loop := walk(rows, cols, startPos, withObstruction(obstructions, p))
 		if loop {
 			count++
 		}
