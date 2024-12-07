@@ -29,6 +29,14 @@ func (e expr) result() int {
 	return 0
 }
 
+func concatenate(x, y int) int {
+	r, err := strconv.Atoi(fmt.Sprintf("%d%d", x, y))
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
 func (e expr) testPartial(currentResult int, remaining []int) bool {
 	// if nothing left, expected should be equal to actual
 	if len(remaining) == 0 {
@@ -50,11 +58,7 @@ func (e expr) testPartial(currentResult int, remaining []int) bool {
 	if !e.concat {
 		return false
 	}
-	newResult, err := strconv.Atoi(fmt.Sprintf("%d%d", currentResult, first))
-	if err != nil {
-		panic(err)
-	}
-	return e.testPartial(newResult, rest)
+	return e.testPartial(concatenate(currentResult, first), rest)
 }
 
 func toNum(s string) int {
