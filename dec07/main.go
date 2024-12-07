@@ -29,33 +29,32 @@ func (e expr) result() int {
 	return 0
 }
 
-func (e expr) testPartial(partialResult int, rest []int) bool {
-	if len(rest) == 0 {
-		return e.expected == partialResult
+func (e expr) testPartial(currentResult int, remaining []int) bool {
+	// if nothing left, expected should be equal to actual
+	if len(remaining) == 0 {
+		return e.expected == currentResult
 	}
-	if partialResult > e.expected {
+	// result can only increase so if already too high bail immediately
+	if currentResult > e.expected {
 		return false
 	}
-	r := rest[0]
-	remaining := rest[1:]
 
-	newResult := partialResult + r
-	if e.testPartial(newResult, remaining) {
+	first, rest := remaining[0], remaining[1:]
+
+	if e.testPartial(currentResult+first, rest) {
 		return true
 	}
-	newResult = partialResult * r
-	if e.testPartial(newResult, remaining) {
+	if e.testPartial(currentResult*first, rest) {
 		return true
 	}
 	if !e.concat {
 		return false
 	}
-	var err error
-	newResult, err = strconv.Atoi(fmt.Sprintf("%d%d", partialResult, r))
+	newResult, err := strconv.Atoi(fmt.Sprintf("%d%d", currentResult, first))
 	if err != nil {
 		panic(err)
 	}
-	return e.testPartial(newResult, remaining)
+	return e.testPartial(newResult, rest)
 }
 
 func toNum(s string) int {
