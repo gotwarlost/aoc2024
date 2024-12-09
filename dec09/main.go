@@ -161,26 +161,20 @@ func part2(layout []int) int {
 	// start from right
 	candidate := list.tail
 	for candidate != nil {
-		if candidate.isEmpty() {
-			candidate = candidate.prev
-			continue
-		}
-		// look for potential free space from left
-		potential := list.head
-		for potential != nil {
-			if potential == candidate {
-				break
-			}
-			if !potential.isEmpty() {
+		if !candidate.isEmpty() {
+			// look for potential free space from left
+			potential := list.head
+			for potential != nil {
+				if potential == candidate {
+					break
+				}
+				if potential.isEmpty() && potential.length() >= candidate.length() {
+					list.fill(potential, candidate.fileID, candidate.length())
+					candidate.fileID = emptyVal
+					break
+				}
 				potential = potential.next
-				continue
 			}
-			if potential.length() >= candidate.length() {
-				list.fill(potential, candidate.fileID, candidate.length())
-				candidate.fileID = emptyVal
-				break
-			}
-			potential = potential.next
 		}
 		candidate = candidate.prev
 	}
