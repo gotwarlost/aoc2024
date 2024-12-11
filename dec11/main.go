@@ -26,7 +26,7 @@ func maybeSplitStone(v int) []int {
 		s2 := s[len(s)/2:]
 		return []int{toNum(s1), toNum(s2)}
 	}
-	return []int{v}
+	return nil
 }
 
 func newStones(v int) []int {
@@ -34,10 +34,27 @@ func newStones(v int) []int {
 		return []int{1}
 	}
 	split := maybeSplitStone(v)
-	if len(split) > 1 {
+	if split != nil {
 		return split
 	}
 	return []int{v * 2024}
+}
+
+func advance(stoneCounters map[int]int, nextStones map[int][]int) {
+	snapshot := map[int]int{}
+	for stone, n := range stoneCounters {
+		snapshot[stone] = n
+	}
+	for stone, n := range snapshot {
+		if nextStones[stone] == nil {
+			nextStones[stone] = newStones(stone)
+		}
+		next := nextStones[stone]
+		for _, s := range next {
+			stoneCounters[s] += n
+		}
+		stoneCounters[stone] -= n
+	}
 }
 
 func main() {
@@ -54,14 +71,6 @@ func main() {
 		stoneCounters[stone]++
 	}
 
-	snapshot := func() map[int]int {
-		ret := map[int]int{}
-		for stone, n := range stoneCounters {
-			ret[stone] = n
-		}
-		return ret
-	}
-
 	countStones := func() int {
 		counter := 0
 		for _, n := range stoneCounters {
@@ -71,17 +80,7 @@ func main() {
 	}
 
 	for i := 0; i < blinks; i++ {
-		counterMap := snapshot()
-		for stone, n := range counterMap {
-			if stoneMap[stone] == nil {
-				stoneMap[stone] = newStones(stone)
-			}
-			next := stoneMap[stone]
-			for _, s := range next {
-				stoneCounters[s] += n
-			}
-			stoneCounters[stone] -= n
-		}
+		advance(stoneCounters, stoneMap)
 		if i == 24 {
 			log.Println("COUNT 25:", countStones())
 		}
