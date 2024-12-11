@@ -60,7 +60,6 @@ func main() {
 	for _, s := range stoneStrings {
 		stones = append(stones, toNum(s))
 	}
-	blinks := 75
 	stoneCounters := map[int]int{}
 
 	for _, stone := range stones {
@@ -75,6 +74,7 @@ func main() {
 		return counter
 	}
 
+	blinks := 75
 	for i := 0; i < blinks; i++ {
 		advance(stoneCounters)
 		if i == 24 {
