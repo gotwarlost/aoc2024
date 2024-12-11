@@ -51,10 +51,15 @@ func main() {
 	stoneCounters := map[int]int{}
 
 	for _, stone := range stones {
-		if stoneMap[stone] == nil {
-			stoneMap[stone] = newStones(stone)
-		}
 		stoneCounters[stone]++
+	}
+
+	snapshot := func() map[int]int {
+		ret := map[int]int{}
+		for stone, n := range stoneCounters {
+			ret[stone] = n
+		}
+		return ret
 	}
 
 	countStones := func() int {
@@ -66,10 +71,7 @@ func main() {
 	}
 
 	for i := 0; i < blinks; i++ {
-		counterMap := map[int]int{}
-		for stone, n := range stoneCounters {
-			counterMap[stone] = n
-		}
+		counterMap := snapshot()
 		for stone, n := range counterMap {
 			if stoneMap[stone] == nil {
 				stoneMap[stone] = newStones(stone)
