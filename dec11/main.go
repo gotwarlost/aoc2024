@@ -40,16 +40,13 @@ func newStones(v int) []int {
 	return []int{v * 2024}
 }
 
-func advance(stoneCounters map[int]int, nextStones map[int][]int) {
+func advance(stoneCounters map[int]int) {
 	snapshot := map[int]int{}
 	for stone, n := range stoneCounters {
 		snapshot[stone] = n
 	}
 	for stone, n := range snapshot {
-		if nextStones[stone] == nil {
-			nextStones[stone] = newStones(stone)
-		}
-		next := nextStones[stone]
+		next := newStones(stone)
 		for _, s := range next {
 			stoneCounters[s] += n
 		}
@@ -64,7 +61,6 @@ func main() {
 		stones = append(stones, toNum(s))
 	}
 	blinks := 75
-	stoneMap := map[int][]int{}
 	stoneCounters := map[int]int{}
 
 	for _, stone := range stones {
@@ -80,7 +76,7 @@ func main() {
 	}
 
 	for i := 0; i < blinks; i++ {
-		advance(stoneCounters, stoneMap)
+		advance(stoneCounters)
 		if i == 24 {
 			log.Println("COUNT 25:", countStones())
 		}
