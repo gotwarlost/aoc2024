@@ -45,11 +45,8 @@ func (s *solution) cost() int64 {
 
 const epsilon = 1e-6
 
-func isValid(f float64) (int64, bool) {
-	if (math.Abs(f-math.Floor(f)) < epsilon) || (math.Abs(f-math.Ceil(f)) < epsilon) {
-		return int64(math.Round(f)), true
-	}
-	return 0, false
+func isInteger(f float64) (int64, bool) {
+	return int64(math.Round(f)), math.Abs(f-math.Round(f)) < epsilon
 }
 
 func equal(f1, f2 float64) bool {
@@ -82,8 +79,8 @@ func (p *problem) solve(prizeOffset int64, constrain100 bool) *solution {
 	n0 := (px*ay - py*ax) / (bx*ay - by*ax)
 	m0 := (px - n0*bx) / ax
 
-	m, valM := isValid(m0)
-	n, valN := isValid(n0)
+	m, valM := isInteger(m0)
+	n, valN := isInteger(n0)
 	if valM && valN {
 		if constrain100 {
 			if m > 100 || n > 100 {
