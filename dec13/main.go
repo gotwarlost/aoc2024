@@ -50,7 +50,8 @@ func isEqual(f1, f2 float64) bool {
 }
 
 func isInteger(f float64) (int64, bool) {
-	return int64(math.Round(f)), isEqual(f, math.Round(f))
+	f0 := math.Round(f)
+	return int64(f0), isEqual(f, f0)
 }
 
 func (p *problem) solve(prizeOffset int64, constrain100 bool) *solution {
