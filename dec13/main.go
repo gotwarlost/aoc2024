@@ -85,13 +85,13 @@ func (p *problem) solve(prizeOffset int64, constrain100 bool) *solution {
 	m, valM := isValid(m0)
 	n, valN := isValid(n0)
 	if valM && valN {
-		s := solution{m: m, n: n}
 		if constrain100 {
 			if m > 100 || n > 100 {
 				debug("no solution", nil)
 				return nil
 			}
 		}
+		s := solution{m: m, n: n}
 		debug("solution:", s)
 		return &s
 	}
