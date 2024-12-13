@@ -72,7 +72,6 @@ func (p *problem) solve(prizeOffset int64, constrain100 bool) *solution {
 	ax, ay := p.a.float64()
 	bx, by := p.b.float64()
 
-	//sameEquation := false
 	ratio := px / py
 	if equal(ax/ay, ratio) && equal(bx/by, ratio) {
 		// there is a solution we can find even for this given integer constraints and costs
