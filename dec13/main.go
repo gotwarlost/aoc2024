@@ -45,12 +45,12 @@ func (s *solution) cost() int64 {
 
 const epsilon = 1e-6
 
-func isInteger(f float64) (int64, bool) {
-	return int64(math.Round(f)), math.Abs(f-math.Round(f)) < epsilon
+func isEqual(f1, f2 float64) bool {
+	return math.Abs(f1-f2) < epsilon
 }
 
-func equal(f1, f2 float64) bool {
-	return math.Abs(f1-f2) < epsilon
+func isInteger(f float64) (int64, bool) {
+	return int64(math.Round(f)), isEqual(f, math.Round(f))
 }
 
 func (p *problem) solve(prizeOffset int64, constrain100 bool) *solution {
@@ -70,7 +70,7 @@ func (p *problem) solve(prizeOffset int64, constrain100 bool) *solution {
 	bx, by := p.b.float64()
 
 	ratio := px / py
-	if equal(ax/ay, ratio) && equal(bx/by, ratio) {
+	if isEqual(ax/ay, ratio) && isEqual(bx/by, ratio) {
 		// there is a solution we can find even for this given integer constraints and costs
 		// but why bother if the data doesn't have this?
 		panic("same equation")
