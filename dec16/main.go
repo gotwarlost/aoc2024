@@ -20,40 +20,6 @@ func (p point) add(other point) point {
 	return point{p.row + other.row, p.col + other.col}
 }
 
-type maze struct {
-	rows, cols int
-	points     map[point]bool
-	walls      map[point]bool
-	startPos   point
-	endPos     point
-}
-
-func (m *maze) hasWallAt(p point) bool {
-	return m.walls[p]
-}
-
-func (m *maze) dump(visited map[point]direction) {
-	for i := 0; i < m.rows; i++ {
-		for j := 0; j < m.cols; j++ {
-			p := point{i, j}
-			d, ok := visited[p]
-			switch {
-			case p == m.startPos:
-				fmt.Print("S")
-			case p == m.endPos:
-				fmt.Print("E")
-			case ok:
-				fmt.Print(d)
-			case m.hasWallAt(p):
-				fmt.Print("#")
-			default:
-				fmt.Print(" ")
-			}
-		}
-		fmt.Println()
-	}
-}
-
 type direction int
 
 const (
@@ -114,7 +80,127 @@ func (d direction) String() string {
 	}
 }
 
-func parse(s string) *maze {
+type item struct {
+	pt    point
+	score int
+	dir   direction
+	prev  *item
+}
+
+type queue struct {
+	items []item
+}
+
+func (q *queue) Len() int           { return len(q.items) }
+func (q *queue) Less(i, j int) bool { return q.items[i].score < q.items[j].score }
+func (q *queue) Swap(i, j int)      { q.items[i], q.items[j] = q.items[j], q.items[i] }
+func (q *queue) Push(x any)         { q.items = append(q.items, x.(item)) }
+func (q *queue) Pop() any {
+	ret := q.items[q.Len()-1]
+	q.items = q.items[:q.Len()-1]
+	return ret
+}
+
+type maze struct {
+	rows, cols int
+	points     map[point]bool
+	walls      map[point]bool
+	startPos   point
+	endPos     point
+}
+
+func (m *maze) hasWallAt(p point) bool {
+	return m.walls[p]
+}
+
+func (m *maze) dump(visited map[point]direction) {
+	for i := 0; i < m.rows; i++ {
+		for j := 0; j < m.cols; j++ {
+			p := point{i, j}
+			d, ok := visited[p]
+			switch {
+			case p == m.startPos:
+				fmt.Print("S")
+			case p == m.endPos:
+				fmt.Print("E")
+			case ok:
+				fmt.Print(d)
+			case m.hasWallAt(p):
+				fmt.Print("|")
+			default:
+				fmt.Print(" ")
+			}
+		}
+		fmt.Println()
+	}
+}
+
+type result struct {
+	visited map[point]bool
+	routes  []map[point]direction
+}
+
+func (r *result) add(it item) {
+	node := &it
+	route := map[point]direction{}
+	for node != nil {
+		r.visited[node.pt] = true
+		route[node.pt] = node.dir
+		node = node.prev
+	}
+	r.routes = append(r.routes, route)
+}
+
+func (m *maze) solve() {
+	q := &queue{
+		items: []item{{pt: m.startPos, dir: dirEast, score: 0}},
+	}
+	heap.Init(q)
+	bestScore := math.MaxInt
+	bestPoints := map[int]*result{}
+	minScores := map[pointDir]int{}
+	for q.Len() > 0 {
+		head := q.Pop().(item)
+		if head.pt == m.endPos {
+			if bestScore > head.score {
+				bestScore = head.score
+			}
+			res := bestPoints[head.score]
+			if res == nil {
+				res = &result{
+					visited: map[point]bool{},
+				}
+				bestPoints[head.score] = res
+			}
+			res.add(head)
+			continue
+		}
+		for _, c := range head.dir.candidates() {
+			nextPos := head.pt.add(c.dir.offset())
+			if !m.points[nextPos] {
+				continue
+			}
+			nextScore := head.score + c.cost
+			pd := pointDir{nextPos, c.dir}
+			current, ok := minScores[pd]
+			if !ok || current >= nextScore {
+				minScores[pd] = nextScore
+				q.Push(item{
+					pt:    nextPos,
+					score: nextScore,
+					dir:   c.dir,
+					prev:  &head,
+				})
+			}
+		}
+	}
+	log.Println("BEST SCORE:", bestScore)
+	res := bestPoints[bestScore]
+	log.Println("POINT COUNT:", len(res.visited))
+	m.dump(res.routes[0])
+}
+
+func newMaze(s string) *maze {
 	lines := strings.Split(strings.TrimSpace(s), "\n")
 	ret := &maze{
 		rows:   len(lines),
@@ -141,79 +227,12 @@ func parse(s string) *maze {
 	return ret
 }
 
-type item struct {
-	pt    point
-	score int
-	dir   direction
-	prev  *item
-}
-
-type queue struct {
-	items []item
-}
-
-func (q *queue) Len() int           { return len(q.items) }
-func (q *queue) Less(i, j int) bool { return q.items[i].score < q.items[j].score }
-func (q *queue) Swap(i, j int)      { q.items[i], q.items[j] = q.items[j], q.items[i] }
-func (q *queue) Push(x any)         { q.items = append(q.items, x.(item)) }
-func (q *queue) Pop() any {
-	ret := q.items[q.Len()-1]
-	q.items = q.items[:q.Len()-1]
-	return ret
-}
-
 type pointDir struct {
 	pt  point
 	dir direction
 }
 
 func main() {
-	m := parse(input)
-	q := &queue{
-		items: []item{{pt: m.startPos, dir: dirEast, score: 0}},
-	}
-	heap.Init(q)
-	bestScore := math.MaxInt
-	bestPoints := map[int]map[point]bool{}
-	minScores := map[pointDir]int{}
-	for q.Len() > 0 {
-		head := q.Pop().(item)
-		if head.pt == m.endPos {
-			if bestScore > head.score {
-				bestScore = head.score
-			}
-			node := &head
-			pts := bestPoints[head.score]
-			if pts == nil {
-				pts = map[point]bool{}
-				bestPoints[head.score] = pts
-			}
-			pts[m.startPos] = true
-			for node.prev != nil {
-				pts[node.pt] = true
-				node = node.prev
-			}
-			continue
-		}
-		for _, c := range head.dir.candidates() {
-			nextPos := head.pt.add(c.dir.offset())
-			if !m.points[nextPos] {
-				continue
-			}
-			nextScore := head.score + c.cost
-			pd := pointDir{nextPos, c.dir}
-			current, ok := minScores[pd]
-			if !ok || current >= nextScore {
-				minScores[pd] = nextScore
-				q.Push(item{
-					pt:    nextPos,
-					score: nextScore,
-					dir:   c.dir,
-					prev:  &head,
-				})
-			}
-		}
-	}
-	log.Println("BEST SCORE:", bestScore)
-	log.Println("POINT COUNT:", len(bestPoints[bestScore]))
+	m := newMaze(input)
+	m.solve()
 }
