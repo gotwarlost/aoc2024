@@ -166,7 +166,7 @@ func main() {
 	log.Println("BEST SCORE:", s)
 	for _, p := range rest {
 		// super inefficient to run the algo over and over instead of tracking if a wall was
-		// not on a known-best path. But it works in the sense of "seconds"
+		// not on a known-best path. But it works in the sense of "minutes"
 		g.addWall(p)
 		_, hasSoln := g.solve()
 		if !hasSoln {
