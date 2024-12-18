@@ -125,19 +125,30 @@ func (q *queue) Pop() any {
 	return ret
 }
 
-func (g *grid) solve() (int, bool) {
+func pathFromItem(node *item) map[point]bool {
+	ret := map[point]bool{}
+	for node != nil {
+		ret[node.pt] = true
+		node = node.prev
+	}
+	return ret
+}
+
+func (g *grid) solve() (int, map[point]bool, bool) {
 	q := &queue{
 		items: []item{{pt: point{0, 0}, score: 0}},
 	}
 	endPos := point{g.rows - 1, g.cols - 1}
 	heap.Init(q)
 	bestScore := math.MaxInt
+	var bestPoints map[point]bool
 	minScores := map[point]int{}
 	for q.Len() > 0 {
 		head := q.Pop().(item)
 		if head.pt == endPos {
 			if bestScore > head.score {
 				bestScore = head.score
+				bestPoints = pathFromItem(&head)
 			}
 			continue
 		}
@@ -154,22 +165,26 @@ func (g *grid) solve() (int, bool) {
 			}
 		}
 	}
-	return bestScore, bestScore != math.MaxInt
+	if bestScore == math.MaxInt {
+		return 0, nil, false
+	}
+	return bestScore, bestPoints, bestScore != math.MaxInt
 }
 
 func main() {
 	g, rest := parse(realInput)
-	s, found := g.solve()
+	s, path, found := g.solve()
 	if !found {
 		panic("no solution for part 1")
 	}
 	log.Println("BEST SCORE:", s)
 	for _, p := range rest {
-		// super inefficient to run the algo over and over instead of tracking if a wall was
-		// not on a known-best path. But it works in the sense of "minutes"
 		g.addWall(p)
-		_, hasSoln := g.solve()
-		if !hasSoln {
+		if !path[p] {
+			continue
+		}
+		_, path, found = g.solve()
+		if !found {
 			log.Printf("POINT OF NO SOLUTION: %d,%d\n", p.col, p.row)
 			break
 		}
