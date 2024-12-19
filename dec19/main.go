@@ -70,8 +70,7 @@ func (p *puzzle) countPossibilities(input string) (ret int) {
 func (p *puzzle) allPossibilities() int {
 	ret := 0
 	for _, pat := range p.patterns {
-		count := p.countPossibilities(pat)
-		ret += count
+		ret += p.countPossibilities(pat)
 	}
 	return ret
 }
