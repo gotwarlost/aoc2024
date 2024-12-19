@@ -67,12 +67,15 @@ func (p *puzzle) countPossibilities(input string) (ret int) {
 	return ret
 }
 
-func (p *puzzle) allPossibilities() int {
-	ret := 0
+func (p *puzzle) solve() (totalPossibe int, numPossibilities int) {
 	for _, pat := range p.patterns {
-		ret += p.countPossibilities(pat)
+		count := p.countPossibilities(pat)
+		if count > 0 {
+			totalPossibe++
+		}
+		numPossibilities += count
 	}
-	return ret
+	return
 }
 
 func (p *puzzle) countPossible() int {
@@ -87,6 +90,7 @@ func (p *puzzle) countPossible() int {
 
 func main() {
 	puz := parse(input)
-	log.Println("POSSIBLE:", puz.countPossible())
-	log.Println("ALL POSSIBILITIES:", puz.allPossibilities())
+	t, a := puz.solve()
+	log.Println("POSSIBLE:", t)
+	log.Println("ALL POSSIBILITIES:", a)
 }
