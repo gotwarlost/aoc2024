@@ -68,13 +68,13 @@ func (d direction) offset() point {
 func (d direction) String() string {
 	switch d {
 	case dirNorth:
-		return "^"
+		return "\u25b2"
 	case dirSouth:
-		return "v"
+		return "\u25bc"
 	case dirWest:
-		return "<"
+		return "\u25c0"
 	case dirEast:
-		return ">"
+		return "\u25b6"
 	default:
 		panic("invalid direction")
 	}
