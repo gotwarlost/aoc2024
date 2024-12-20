@@ -68,7 +68,6 @@ type maze struct {
 	walls      map[point]bool
 	startPos   point
 	endPos     point
-	soln       *solution
 }
 
 func (m *maze) hasWallAt(p point) bool {
@@ -80,21 +79,6 @@ func (m *maze) possibleNextPlaces(p point) []point {
 	add := func(row, col int) {
 		c := p.add(row, col)
 		if !m.hasWallAt(c) {
-			ret = append(ret, c)
-		}
-	}
-	add(-1, 0)
-	add(1, 0)
-	add(0, -1)
-	add(0, 1)
-	return ret
-}
-
-func (m *maze) blockingWalls(p point) []point {
-	var ret []point
-	add := func(row, col int) {
-		c := p.add(row, col)
-		if m.hasWallAt(c) {
 			ret = append(ret, c)
 		}
 	}
