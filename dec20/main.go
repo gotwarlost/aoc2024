@@ -21,7 +21,7 @@ func (p point) add(row, col int) point {
 	return point{p.row + row, p.col + col}
 }
 
-func (p point) displacement(other point) int {
+func (p point) manhattanDistance(other point) int {
 	abs := func(x int) int {
 		if x < 0 {
 			return -x
@@ -217,7 +217,7 @@ func (s solution) savings(maxCheats int) map[int]int {
 		for j := i + 1; j < len(s); j++ {
 			candidate := s[j]
 			distance := j - i
-			cheatDistance := p.displacement(candidate)
+			cheatDistance := p.manhattanDistance(candidate)
 			if cheatDistance <= maxCheats && cheatDistance < distance {
 				addSaving(p, candidate, distance-cheatDistance)
 			}
