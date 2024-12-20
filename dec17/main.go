@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -122,6 +123,7 @@ type puzzle struct {
 	registers    []int
 	instructions []int
 	instStr      string
+	possibleAs   []int
 }
 
 func toNum(s string) int {
@@ -164,15 +166,14 @@ func parse(s string) *puzzle {
 	return ret
 }
 
-func (p *puzzle) solve(part2 bool) string {
+func (p *puzzle) execute(part2 bool) []int {
 	ip := 0
-	var output []string
-	var intout []int
+	var output []int
 	for ip < len(p.instructions) {
 		code := opcode(p.instructions[ip])
 		if code > 7 {
 			if part2 {
-				return ""
+				return nil
 			}
 			panic("opcode out of bounds")
 		}
@@ -180,19 +181,16 @@ func (p *puzzle) solve(part2 bool) string {
 		res := ops[code](operand, p.registers)
 		if res.out != nil {
 			x := *res.out
-			intout = append(intout, x)
+			output = append(output, x)
 			if part2 {
-				if intout[len(intout)-1] != p.instructions[len(intout)-1] {
-					return ""
-				}
+				return output
 			}
-			output = append(output, fmt.Sprint(x))
 		}
 		if res.ip != nil {
 			ip = *res.ip
 			if ip < 0 || ip > len(p.instructions)-1 {
 				if part2 {
-					return ""
+					return nil
 				}
 				panic(fmt.Sprintf("bad ip: %d", ip))
 			}
@@ -200,11 +198,46 @@ func (p *puzzle) solve(part2 bool) string {
 			ip += 2
 		}
 	}
-	return strings.Join(output, ",")
+	return output
+}
+
+func (p *puzzle) part1() string {
+	output := p.execute(false)
+	var strs []string
+	for _, i := range output {
+		strs = append(strs, fmt.Sprint(i))
+	}
+	return strings.Join(strs, ",")
+}
+
+func (p *puzzle) part2Step(currentA int, index int) {
+	for i := 0; i < 8; i++ {
+		newA := currentA<<3 | i
+		p.registers[regA] = newA
+		output := p.execute(true)
+		if len(output) != 1 {
+			continue
+		}
+		if output[0] == p.instructions[index] {
+			if index == 0 {
+				p.possibleAs = append(p.possibleAs, newA)
+			} else {
+				p.part2Step(newA, index-1)
+			}
+		}
+	}
+}
+
+func (p *puzzle) part2() int {
+	p.part2Step(0, len(p.instructions)-1)
+	sort.Ints(p.possibleAs)
+	log.Println("possible As:", p.possibleAs)
+	return p.possibleAs[0]
 }
 
 func main() {
 	puz := parse(input)
-	output := puz.solve(false)
-	log.Println("OUTPUT:", output)
+	log.Println("OUTPUT:", puz.part1())
+	puz = parse(input)
+	log.Println("MIN A:", puz.part2())
 }

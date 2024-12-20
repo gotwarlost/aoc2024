@@ -1,13 +1,8 @@
 bst [2] 4 regB = regA % 8
 bxl [1] 2 regB = regB ^ 2
-cdv [7] 5 regC = regA / 2^regB
+cdv [7] 5 regC = regA / 2**regB
 bxc [4] 1 regB = regB ^ regC
 bxl [1] 3 regB = regB ^ 1
 out [5] 5 OUT = regB % 8
 adv [0] 3 regA / 8
 jnz [3] 0 JMP regA
-
-111
-001
-
-110
