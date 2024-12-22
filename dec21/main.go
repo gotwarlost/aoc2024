@@ -161,6 +161,39 @@ func setupKeyboard(valueMap map[point]string, maxRows, maxCols int) map[pair][]s
 			setShortestPathsFrom(row, col)
 		}
 	}
+
+	type pcount struct {
+		path   string
+		twists int
+	}
+	pruneShortestPaths := func(paths []string) []string {
+		var counts []pcount
+		for _, p := range paths {
+			twists := 0
+			for i := 1; i < len(p); i++ {
+				if p[i] != p[i-1] {
+					twists++
+				}
+			}
+			counts = append(counts, pcount{path: p, twists: twists})
+		}
+		sort.Slice(counts, func(i, j int) bool {
+			return counts[i].twists < counts[j].twists
+		})
+		minTwists := counts[0].twists
+		var ret []string
+		for i := 0; i < len(counts); i++ {
+			if counts[i].twists == minTwists {
+				ret = append(ret, counts[i].path)
+			}
+		}
+		return ret
+	}
+
+	for k, v := range shortestPaths {
+		shortestPaths[k] = pruneShortestPaths(v)
+	}
+
 	return shortestPaths
 }
 
@@ -242,30 +275,10 @@ type puzzle struct {
 	dir *keyboard
 }
 
-func (z *puzzle) traversePointsStep1(values []string) []string {
+func (z *puzzle) traversePoints(kbd *keyboard, values []string) []string {
 	head := values[0]
 	rest := values[1:]
-	paths := z.num.shortestPaths[pair{head, rest[0]}]
-	var ret []string
-	if len(rest) == 1 {
-		for _, p := range paths {
-			ret = append(ret, p+"A")
-		}
-	} else {
-		remaining := z.traversePointsStep1(rest)
-		for _, p := range paths {
-			for _, a := range remaining {
-				ret = append(ret, p+"A"+a)
-			}
-		}
-	}
-	return ret
-}
-
-func (z *puzzle) traversePointsDir(values []string) []string {
-	head := values[0]
-	rest := values[1:]
-	paths := z.dir.shortestPaths[pair{head, rest[0]}]
+	paths := kbd.shortestPaths[pair{head, rest[0]}]
 	if len(paths) == 0 {
 		paths = []string{""}
 	}
@@ -275,7 +288,7 @@ func (z *puzzle) traversePointsDir(values []string) []string {
 			ret = append(ret, p+"A")
 		}
 	} else {
-		remaining := z.traversePointsDir(rest)
+		remaining := z.traversePoints(kbd, rest)
 		for _, p := range paths {
 			for _, a := range remaining {
 				ret = append(ret, p+"A"+a)
@@ -309,36 +322,27 @@ func debugCandidates(cs []string) {
 	}
 }
 
-func (z *puzzle) findShortestForCode(code string) int {
-	// step 1: expand possibilities for code
-	values := toValues(code)
-
+func (z *puzzle) findShortestForCode(code string, iterations int) int {
 	log.Println("CODE:", code)
-	step1Candidates := z.traversePointsStep1(values)
-	sortByLength(step1Candidates)
-
-	//log.Println("step 1")
-	//debugCandidates(step1Candidates)
-
-	//log.Println("step 2")
-	var step2Candidates []string
-	for _, s := range step1Candidates {
-		candidates := z.traversePointsDir(toValues(s))
-		step2Candidates = append(step2Candidates, candidates...)
+	candidates := []string{code}
+	for i := 0; i < iterations; i++ {
+		var next []string
+		kbd := z.dir
+		if i == 0 {
+			kbd = z.num
+		}
+		for _, c := range candidates {
+			nextCandidates := z.traversePoints(kbd, toValues(c))
+			next = append(next, nextCandidates...)
+		}
+		candidates = next
+		sortByLength(candidates)
+		log.Println("i=", i, ", total candidates=", len(candidates),
+			", shortest length", len(candidates[0]),
+			", longest length", len(candidates[len(candidates)-1]))
+		log.Println(candidates[0])
 	}
-	sortByLength(step2Candidates)
-	//debugCandidates(step2Candidates)
-
-	log.Println("step 3")
-	var step3Candidates []string
-	for _, s := range step2Candidates {
-		candidates := z.traversePointsDir(toValues(s))
-		step3Candidates = append(step3Candidates, candidates...)
-	}
-	sortByLength(step3Candidates)
-	//debugCandidates(step3Candidates)
-	log.Println("SHORTEST:", len(step3Candidates[0]))
-	return len(step3Candidates[0])
+	return len(candidates[0])
 }
 
 func main() {
@@ -347,7 +351,7 @@ func main() {
 	sum := 0
 	var vals []int
 	for _, code := range codes {
-		shortestSteps := puz.findShortestForCode(code)
+		shortestSteps := puz.findShortestForCode(code, 3)
 		code0 := strings.TrimSuffix(code, "A")
 		n, err := strconv.Atoi(code0)
 		if err != nil {
