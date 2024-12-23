@@ -57,10 +57,7 @@ func ncr(candidates []string, r int, collaborators map[string]map[string]bool) [
 			people = append(people, candidates[i])
 		}
 		if areConnected(people) {
-			var combo []string
-			for _, p := range people {
-				combo = append(combo, p)
-			}
+			combo := people
 			sort.Strings(combo)
 			ret = append(ret, combo)
 		}
@@ -98,7 +95,6 @@ func part1(pairs []pair) {
 		}
 	}
 	log.Println("T TRIPLES:", len(ret2))
-	log.Println("DISTINCT PEOPLE:", len(collaborators))
 }
 
 func part2(pairs []pair) {
@@ -131,9 +127,6 @@ func main() {
 	var pairs []pair
 	for _, line := range lines {
 		parts := strings.Split(line, "-")
-		if parts[0] > parts[1] {
-			parts[0], parts[1] = parts[1], parts[0]
-		}
 		pairs = append(pairs, pair{parts[0], parts[1]})
 	}
 	part1(pairs)
